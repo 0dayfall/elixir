@@ -1,10 +1,6 @@
 defmodule Genetic do
-  def hello do
-    :world
-  end
-
   def run(fitness_function, genotype, max_fitness, opts \\ []) do
-    population = initialize(genotype)
+    population = initialize(genotype, opts)
     population
     |> evolve(fitness_function, genotype, max_fitness, opts)
   end
@@ -17,15 +13,16 @@ defmodule Genetic do
       best
     else
       population
-      |> select()
-      |> crossover()
-      |> mutation()
-      |> evolve(fitness_function, genotype, max_fitness)
+      |> select(opts)
+      |> crossover(opts)
+      |> mutation(opts)
+      |> evolve(fitness_function, genotype, max_fitness, opts)
     end
   end
 
   def initialize(genotype, opts \\ []) do
-    for _ <- 1..100, do: genotype.()
+    population_size = Keyword.get(opts, :population_size, 100)
+    for _ <- 1..population_size, do: genotype.()
   end
 
   def evaluate(population, fitness_function, opts \\ []) do
@@ -42,21 +39,21 @@ defmodule Genetic do
   def crossover(population, opts \\ []) do
     population
     |> Enum.reduce([],
-    fn {p1,p2}, acc ->
-      cx_point = :rand.uniform(length(p1)))
-      {{h1,t1}, {h2, t2}} =
-        {Enum.split(p1, cx_point),
-      Enum.split(p2, cx_point)}
-      {c1, c2} = {h1 ++ t2, h2 ++ t1}
-      [c1, c2 | acc]
-    end
-  )
+        fn {p1,p2}, acc ->
+          cx_point = :rand.uniform(length(p1))
+          {{h1,t1}, {h2, t2}} =
+            {Enum.split(p1, cx_point),
+            Enum.split(p2, cx_point)}
+          {c1, c2} = {h1 ++ t2, h2 ++ t1}
+          [c1, c2 | acc]
+        end
+      )
   end
 
   def mutation(population, opts \\ []) do
     population
     |> Enum.map(
-      fn cromosome ->
+      fn chromosome ->
         if :rand.uniform() < 0.05 do
           Enum.shuffle(chromosome)
         else
@@ -65,3 +62,4 @@ defmodule Genetic do
       end
     )
   end
+end
